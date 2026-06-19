@@ -12,22 +12,29 @@ int main() {
         {0,0,0,0,0}
     };
 
-    // 90 degree Rotate matrix
+ // 90 degree Rotate matrix
+  double theta = PI/90;
+
     for(int j = 0; j < SIZE; j++) {
         for(int i = 0; i < SIZE; i++) {
-            // ここでifが出てくる時点でindex i,jを変えて回転させたほうが早いかも
-            if(matrix[j][i] == 1) {
+
+            if(matrix[j][i]) {
+
                 double x = i - 2;
                 double y = j - 2;
-                double nx = x*cos(PI/2) - y*sin(PI/2);
-                double ny = x * sin(PI/2) + y*cos(PI/2);
-                printf("x: %d", x);
-                printf("y: %d", y);
-                tmpMatrix[y][x] = 1;
+
+                double nx = x*cos(theta) - y*sin(theta);
+                double ny = x*sin(theta) + y*cos(theta);
+
+                int rx = (int)round(nx);
+                int ry = (int)round(ny);
+
+                tmpMatrix[ry + 2][rx + 2] = 1;
             }
         }
     }
     
+    // Draw matrix
     for(int j = 0; j < SIZE; j++) {
         for(int i = 0; i < SIZE; i++) {
             printf("%d",tmpMatrix[j][i]);
