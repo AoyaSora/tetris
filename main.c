@@ -12,7 +12,7 @@ int main() {
 
 
     int quit = 0;
-    int x[5], y[5];
+    int tetris[5][5];
     int board[ROWS][COLS] = {0};
     while (!quit)
     {
@@ -41,29 +41,21 @@ int main() {
         int xdir = 0, ydir = 1;
         int startx = (COLS -1) / 2 + 1;
         int starty = 3;
-        
-        x[0] = startx;
-        y[0] = starty;
+        int tetY = starty, tetX = startx; // it's base on EscapeSequene
+        // top left "·" potition
+        printf("\e[%i;%iH❤",starty,2); 
 
         while(!quit && !gameover) {
             // Clear tetris
-            printf("\e[%iB\e[%iC·", y[0], x[0]);
-            printf("\e[%i;%iH",1,1);
+            if(tetY!=starty) printf("\e[%i;%iH·",tetY-1, tetX);
 
-            y[0]++;
-
-            // 
-            if(y[0] == ROWS + 3) {
-                // Draw tetris
-                printf("\e[%iB\e[%iC#", y[0] - 1, x[0]);
-                printf("\e[%i;%iH",1,1);
-                board[y[0]][x[0]] = 1;
-                y[0] = starty;
-                x[0] = startx;
-            }
             // Draw tetris
-            printf("\e[%iB\e[%iC#", y[0], x[0]);
-            printf("\e[%i;%iH",1,1);
+            printf("\e[%i;%iH#",tetY, tetX);
+            if(tetY == 2 + ROWS || board[tetY-2][tetX-2] == 1) {
+                board[tetY-3][tetX-2] = 1;
+                tetY = starty; tetX = startx;
+            }
+            tetY++;
 
             fflush(stdout);
             usleep(5 * 1000000 / 60);
