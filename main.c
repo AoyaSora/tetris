@@ -7,8 +7,8 @@
 #define ROWS 30
 #define BLOCKSIZE 5
 void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
-
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
+int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX);
 int startx = COLS / 2 + 2;
 int starty = 3;
 int main() {
@@ -65,8 +65,10 @@ int main() {
             // printf("\e[%i;%iH#",tetY, tetX);
 
             // Touch floar or under Tetris
-            if(tetY == 2 + ROWS || board[tetY-2][tetX-2] == 1) {
+            if(isStopTetris(board,square,tetY,tetX) || board[tetY-2][tetX-2] == 1) {
+                // 
                 board[tetY-3][tetX-2] = 1;
+                
                 tetY = starty; tetX = startx;
             }
             tetY++;
@@ -104,7 +106,19 @@ void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
     }
 }
 
-int isStopTetris(int* board,const int block[][BLOCKSIZE],int tetY,int tetX) {
+int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX) {
+    // touch floar
+    for(int j = 0; j < BLOCKSIZE; j ++) {
+        int y = tetY - 2 + j;
+        for(int i = 0; i < BLOCKSIZE; i ++) {
+            int x = tetX - 2 + i;
+            if(block[j][i] == 1) {
+                if(y >= ROWS + 2) {
+                    return 1;
+                }
+            }
+        }
+    }
     // compare board and block
     return 0;
 }
