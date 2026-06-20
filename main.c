@@ -6,19 +6,20 @@
 #define COLS 50
 #define ROWS 30
 #define BLOCKSIZE 5
+void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
 
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
-int startx = (COLS -1) / 2 + 1;
+int startx = COLS / 2 + 2;
 int starty = 3;
 int main() {
     // Hide cursor
     // printf("\e[?25l");
         const int square[BLOCKSIZE][BLOCKSIZE] = {
-            {0,0,0,0,0},
-            {0,0,0,0,0},
             {0,0,1,1,0},
+            {0,0,1,0,0},
+            {0,1,1,0,0},
             {0,0,1,1,0},
-            {0,0,0,0,0},
+            {0,0,1,0,0},
         };
   
 
@@ -56,7 +57,8 @@ int main() {
 
         while(!quit && !gameover) {
             // Clear tetris
-            if(tetY!=starty) printf("\e[%i;%iH·",tetY-1, tetX);
+            if(tetY!=starty) clearBlock(square,tetY-1,tetX);
+            // printf("\e[%i;%iH·",tetY-1, tetX);
 
             // Draw tetris
             printBlock(square,tetY,tetX);
@@ -67,7 +69,7 @@ int main() {
                 board[tetY-3][tetX-2] = 1;
                 tetY = starty; tetX = startx;
             }
-            // tetY++;
+            tetY++;
 
             fflush(stdout);
             usleep(5 * 1000000 / 60);
@@ -84,9 +86,25 @@ void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
         int y = tetY - 2 + j;
         for(int i = 0; i < BLOCKSIZE; i++) {
             int x = tetX - 2 + i;
-            if( block[j][i] == 1 || starty< y) {
+            if( block[j][i] == 1 && starty <= y) {
                 printf("\e[%i;%iH#",y,x);
             }
         }
     }
+}
+void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
+    for(int j = 0; j < BLOCKSIZE; j++) {
+        int y = tetY - 2 + j;
+        for(int i = 0; i < BLOCKSIZE; i++) {
+            int x = tetX - 2 + i;
+            if( block[j][i] == 1 && starty <= y) {
+                printf("\e[%i;%iH·",y,x);
+            }
+        }
+    }
+}
+
+int isStopTetris(int* board,const int block[][BLOCKSIZE],int tetY,int tetX) {
+    // compare board and block
+    return 0;
 }
