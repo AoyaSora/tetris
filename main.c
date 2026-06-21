@@ -8,7 +8,7 @@
 #define ROWS 30 // 行
 #define BLOCKTYPES 3
 #define BLOCKSIZE 5
-void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int rotationCount, int* isRotation);
+void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion);
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX);
 int startx = COLS / 2 + 2;
@@ -39,11 +39,11 @@ int main() {
         {0,0,0,0,0},
     };
     const int rocket[BLOCKSIZE][BLOCKSIZE] = {
-        {0,0,1,0,0},
-        {0,0,1,0,0},
-        {0,1,1,1,0},
-        {0,0,1,0,0},
-        {0,0,1,0,0},
+        {0,1,0,0,0},
+        {0,1,0,0,0},
+        {0,1,0,0,0},
+        {0,1,0,0,0},
+        {0,0,0,0,0},
     };
     /*
     BLOCKSIZE列の二次元配列へのポインタを格納する配列
@@ -81,8 +81,9 @@ int main() {
         printf("\e[%iA", ROWS + 2);
 
         int gameover = 0;
-        int tetY = starty, tetX = startx; // it's base on EscapeSequene
-        int beforeTetY = starty, beforeTetX = startx;
+        int newTetY = starty, newTetX = startx; // it's base on EscapeSequene
+        int oldTetY = starty, oldTetX = startx;
+        int oldRotation = 0, newRotation = 0;
         // top left "·" potition
         printf("\e[%i;%iH❤",starty,2); 
 
@@ -97,16 +98,16 @@ int main() {
 
             for(int j = 0; j < BLOCKSIZE; j++) {
                 for(int i = 0; i < BLOCKSIZE; i++ ) {
-                    if(rotationCount == 0) {
+                    if(newRotation == 0) {
                         block[j][i] = blocks[idx][j][i];
                     }
-                    else if(rotationCount == 1) {
+                    else if(newRotation == 1) {
                         block[j][i] = blocks[idx][BLOCKSIZE - 1 - i][j];
                     }
-                    else if(rotationCount == 2) {
+                    else if(newRotation == 2) {
                         block[j][i] = blocks[idx][BLOCKSIZE - 1 - j][BLOCKSIZE -1 - i];
                     }
-                    else if(rotationCount == 3) {
+                    else if(newRotation == 3) {
                         block[j][i] = blocks[idx][i][BLOCKSIZE - 1 - j];
                     }
                 }
@@ -114,11 +115,11 @@ int main() {
             
             int tetLeft = COLS,tetRight = 0,tetUpper = 0,tetUnder = ROWS;
             for(int j = 0; j < BLOCKSIZE; j++) {
-                int tmpH = tetY + j;
+                int tmpH = newTetY + j;
                 for(int i = 0; i < BLOCKSIZE; i++) {
                     
                     if(block[j][i] == 1) {
-                        int tmpW = tetX + i - 4;
+                        int tmpW = newTetX + i - 4;
                         if(tmpW < tetLeft) tetLeft = tmpW;
                         if(tmpW > tetRight) tetRight = tmpW;
                         if(tmpH < tetUnder) tetUnder = tmpH;
@@ -131,19 +132,19 @@ int main() {
 
 
             // Clear tetris
-            if(tetY!=starty) clearBlock(block,beforeTetY-1,beforeTetX,rotationCount,&isRotation);
-            // printf("\e[%i;%iHtetX:%02d, tetY:%02d, beforeTetX:%02d, beforeTetY:%02d",20,20,tetX,tetY,beforeTetX,beforeTetY);
+            if(newTetY!=starty) clearBlock(block,oldTetY,oldTetX,newRotation, oldRotation);
+            // printf("\e[%i;%iHtetX:%02d, tetY:%02d, oldTetX:%02d, oldTetY:%02d",20,20,tetX,tetY,oldTetX,oldTetY);
 
             // Draw tetris
-            printBlock(block,tetY,tetX);
+            printBlock(block,newTetY,newTetX);
             
             // Touch floar or under Tetris
-            if(isStopTetris(board,block,tetY,tetX)) {
+            if(isStopTetris(board,block,newTetY,newTetX)) {
                 // add tetris to board
                 for(int j = 0; j < BLOCKSIZE; j++) {
-                    int y = tetY - 2 -3 + j;
+                    int y = newTetY - 2 -3 + j;
                     for(int i = 0; i < BLOCKSIZE; i++ ) {
-                        int x = tetX - 2 -2+ i;
+                        int x = newTetX - 2 -2+ i;
                         if(block[j][i] == 1) {
                             board[y][x] = 1;
                             // printf("\e[%i;%iHx:%d ,y:%d\n",20+c,20,x, y);
@@ -152,16 +153,17 @@ int main() {
                     }
                 }
                 idx = rand() % BLOCKTYPES;
-                tetY = starty; tetX = startx;
-                beforeTetY = starty; beforeTetX = startx;
+                newTetY = starty; newTetX = startx;
+                oldTetY = starty; oldTetX = startx;
                 rotationCount = 0; isRotation = 0;
+                oldRotation = newRotation;
             }
-            beforeTetY = tetY;
-            beforeTetX = tetX;
-            tetY++;
+            oldTetY = newTetY;
+            oldTetX = newTetX;
+            newTetY++;
 
             fflush(stdout);
-            usleep(5 * 1000000 / 60);
+            usleep(100 * 1000000 / 60);
 
             // READ keyboard
             struct timeval tv;
@@ -172,28 +174,32 @@ int main() {
             FD_ZERO(&fds);
             FD_SET(STDIN_FILENO, &fds);
             select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
+            oldRotation = newRotation;
             if (FD_ISSET(STDIN_FILENO, &fds)) {
                 int ch = getchar();
                 if (ch == 27 || ch == 'q') {
                 quit = 1;
                 } else if (ch == 'a' && tetLeft > 0) {
-                beforeTetX = tetX;                
-                tetX += -1;
+                newTetX += -1;
                 } else if (ch == 'd' && tetRight < COLS-1) {
-                beforeTetX = tetX;             
-                tetX += 1;
+                newTetX += 1;
                 } else if (ch == 's' && tetUnder < ROWS) {
-                beforeTetY = tetY;
-                tetY += 1;
+                newTetY += 1;
                 } else if (ch == 'r' ) { //&& (tetRight < ROWS )&& (tetUnder > 0) && (tetUpper < COLS -1)
                     // 右 -> 下． 下 -> 左． 左 -> 上． 上 -> 右
                     // 上と下，右の情報が欲しい
-                    printf("\e[%i;%iH rotationCount:%d \n",21,21,rotationCount);
-                    isRotation = 1;
-                    rotationCount++;
-                    if(rotationCount == 4) rotationCount = 0;
+                    // isRotation = 1;
+                    // rotationCount++;
+                    oldRotation = newRotation;
+                    newRotation++;
+                    
+                    // if(rotationCount == 4) rotationCount = 0;
+                    if(newRotation == 4) newRotation = 0;
                 }
             }  
+            printf("\e[%i;%iH oldRotation:%02d \n",21,21,oldRotation);
+            printf("\e[%i;%iH newRotation:%02d \n",22,21,newRotation);
+ 
         }
         if ( !quit) {
             // Show game over 
@@ -222,23 +228,21 @@ void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
         }
     }
 }
-void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int rotationCount, int* isRotation) {
-    if(*isRotation) {
+void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion) {
+    if(newRotaion != oldRotaion) {
+        int y = tetY - 2 ; int x = tetX -2; // i,jのために左上基準
         for(int j = 0; j < BLOCKSIZE; j++) {
-        int y = tetY - 1 + j;
             for(int i = 0; i < BLOCKSIZE; i++) {
-                int x = tetX - 2 + i;
                 if( block[j][i] == 1 && starty <= y) {
-                    int rx = BLOCKSIZE - 1 - j;
-                    int ry = i;
-                    printf("\e[%i;%iH·",tetY -1 + ry, tetX -2 + rx);
+                    int rx = x +  BLOCKSIZE -1 - i;
+                    int ry = y +  j;
+                    printf("\e[%i;%iH❤",ry, rx);                  
                 }
             }
         }
-        *isRotation = 0;
     }else {
         for(int j = 0; j < BLOCKSIZE; j++) {
-            int y = tetY - 1 + j;
+            int y = tetY - 2 + j;
             for(int i = 0; i < BLOCKSIZE; i++) {
                 int x = tetX - 2 + i;
                 if( block[j][i] == 1 && starty <= y) {
