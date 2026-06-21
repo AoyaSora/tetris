@@ -8,7 +8,7 @@
 #define ROWS 30 // 行
 #define BLOCKTYPES 3
 #define BLOCKSIZE 5
-void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
+void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int rotationCount, int* isRotation);
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX);
 int startx = COLS / 2 + 2;
@@ -25,7 +25,7 @@ int main() {
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
     const int square[BLOCKSIZE][BLOCKSIZE] = {
-        {1,1,0,0,0},
+        {0,0,0,0,0},
         {0,0,0,0,0},
         {0,1,1,0,0},
         {0,1,1,0,0},
@@ -42,8 +42,8 @@ int main() {
         {0,0,1,0,0},
         {0,0,1,0,0},
         {0,1,1,1,0},
-        {0,1,0,1,0},
-        {0,1,0,1,0},
+        {0,0,1,0,0},
+        {0,0,1,0,0},
     };
     /*
     BLOCKSIZE列の二次元配列へのポインタを格納する配列
@@ -92,6 +92,7 @@ int main() {
         idx = 2;
         int rotationCount=0;
         int block[BLOCKSIZE][BLOCKSIZE];
+        int isRotation = 0;
         while(!quit && !gameover) {
 
             for(int j = 0; j < BLOCKSIZE; j++) {
@@ -111,7 +112,7 @@ int main() {
                 }
             }
             
-            int tetLeft = COLS,tetRight = 0,tetUnder = ROWS;
+            int tetLeft = COLS,tetRight = 0,tetUpper = 0,tetUnder = ROWS;
             for(int j = 0; j < BLOCKSIZE; j++) {
                 int tmpH = tetY + j;
                 for(int i = 0; i < BLOCKSIZE; i++) {
@@ -121,6 +122,7 @@ int main() {
                         if(tmpW < tetLeft) tetLeft = tmpW;
                         if(tmpW > tetRight) tetRight = tmpW;
                         if(tmpH < tetUnder) tetUnder = tmpH;
+                        if(tmpH > tetUpper) tetUpper = tmpH;
                     }
                 }
             }
@@ -129,7 +131,7 @@ int main() {
 
 
             // Clear tetris
-            if(tetY!=starty) clearBlock(block,beforeTetY-1,beforeTetX);
+            if(tetY!=starty) clearBlock(block,beforeTetY-1,beforeTetX,rotationCount,&isRotation);
             // printf("\e[%i;%iHtetX:%02d, tetY:%02d, beforeTetX:%02d, beforeTetY:%02d",20,20,tetX,tetY,beforeTetX,beforeTetY);
 
             // Draw tetris
@@ -152,7 +154,7 @@ int main() {
                 idx = rand() % BLOCKTYPES;
                 tetY = starty; tetX = startx;
                 beforeTetY = starty; beforeTetX = startx;
-                rotationCount = 0;
+                rotationCount = 0; isRotation = 0;
             }
             beforeTetY = tetY;
             beforeTetX = tetX;
@@ -183,9 +185,11 @@ int main() {
                 } else if (ch == 's' && tetUnder < ROWS) {
                 beforeTetY = tetY;
                 tetY += 1;
-                } else if (ch == 'r') {
+                } else if (ch == 'r' && (tetRight < ROWS )&& (tetUnder > 0) && (tetUpper < COLS -1)) {
+                    // 右 -> 下． 下 -> 左． 左 -> 上． 上 -> 右
+                    // 上と下，右の情報が欲しい
                     printf("\e[%i;%iH rotationCount:%d \n",21,21,rotationCount);
-                    
+                    isRotation = 1;
                     rotationCount++;
                     if(rotationCount == 4) rotationCount = 0;
                 }
@@ -218,16 +222,31 @@ void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
         }
     }
 }
-void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
-    for(int j = 0; j < BLOCKSIZE; j++) {
+void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int rotationCount, int* isRotation) {
+    if(*isRotation) {
+        for(int j = 0; j < BLOCKSIZE; j++) {
         int y = tetY - 1 + j;
-        for(int i = 0; i < BLOCKSIZE; i++) {
-            int x = tetX - 2 + i;
-            if( block[j][i] == 1 && starty <= y) {
-                printf("\e[%i;%iH·",y,x);
+            for(int i = 0; i < BLOCKSIZE; i++) {
+                int x = tetX - 2 + i;
+                if( block[j][i] == 1 && starty <= y) {
+                    int rx = BLOCKSIZE - 1 - j;
+                    int ry = i;
+                    printf("\e[%i;%iH·",tetY -1 + ry, tetX -2 + rx);
+                }
             }
         }
-    }
+        *isRotation = 0;
+    }else {
+        for(int j = 0; j < BLOCKSIZE; j++) {
+            int y = tetY - 1 + j;
+            for(int i = 0; i < BLOCKSIZE; i++) {
+                int x = tetX - 2 + i;
+                if( block[j][i] == 1 && starty <= y) {
+                    printf("\e[%i;%iH·",y,x);
+                }
+            }
+        }
+    } 
 }
 
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX) {
