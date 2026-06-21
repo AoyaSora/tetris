@@ -92,8 +92,25 @@ int main() {
 
         while(!quit && !gameover) {
             const int (*block)[BLOCKSIZE]  = blocks[idx];
+            int tetLeft = COLS,tetRight = 0,tetUnder = ROWS;
+            for(int j = 0; j < BLOCKSIZE; j++) {
+                int tmpH = tetY + j;
+                for(int i = 0; i < BLOCKSIZE; i++) {
+                    if(block[j][i] == 1) {
+                        int tmpW = tetX + i - 4;
+                        if(tmpW < tetLeft) tetLeft = tmpW;
+                        if(tmpW > tetRight) tetRight = tmpW;
+                        if(tmpH < tetUnder) tetUnder = tmpH;
+                    }
+                }
+            }
+            // printf("\e[%i;%iHtetX:%02d, tetLeft:%02d ,tetRight:%02d\n",20,20, tetX, tetLeft, tetRight);
+
+
+
             // Clear tetris
             if(tetY!=starty) clearBlock(block,beforeTetY-1,beforeTetX);
+            printf("\e[%i;%iHtetX:%02d, tetY:%02d, beforeTetX:%02d, beforeTetY:%02d",20,20,tetX,tetY,beforeTetX,beforeTetY);
 
             // Draw tetris
             printBlock(block,tetY,tetX);
@@ -114,9 +131,11 @@ int main() {
                 }
                 idx = rand() % BLOCKTYPES;
                 tetY = starty; tetX = startx;
+                beforeTetY = starty; beforeTetX = startx;
             }
-            tetY++;
             beforeTetY = tetY;
+            beforeTetX = tetX;
+            tetY++;
 
             fflush(stdout);
             usleep(5 * 1000000 / 60);
@@ -134,13 +153,13 @@ int main() {
                 int ch = getchar();
                 if (ch == 27 || ch == 'q') {
                 quit = 1;
-                } else if (ch == 'a' && tetX > 2) {
+                } else if (ch == 'a' && tetLeft > 0) {
                 beforeTetX = tetX;                
                 tetX += -1;
-                } else if (ch == 'd' && tetX < COLS) {
+                } else if (ch == 'd' && tetRight < COLS-1) {
                 beforeTetX = tetX;             
                 tetX += 1;
-                } else if (ch == 's' && tetY < ROWS) {
+                } else if (ch == 's' && tetUnder < ROWS) {
                 beforeTetY = tetY;
                 tetY += 1;
                 } 
@@ -175,11 +194,11 @@ void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
 }
 void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
     for(int j = 0; j < BLOCKSIZE; j++) {
-        int y = tetY - 2 + j;
+        int y = tetY - 1 + j;
         for(int i = 0; i < BLOCKSIZE; i++) {
             int x = tetX - 2 + i;
             if( block[j][i] == 1 && starty <= y) {
-                printf("\e[%i;%iH❤",y,x);
+                printf("\e[%i;%iH·",y,x);
             }
         }
     }
