@@ -185,7 +185,7 @@ int main() {
                 } else if (ch == 's' && tetUnder < ROWS) {
                 beforeTetY = tetY;
                 tetY += 1;
-                } else if (ch == 'r' && (tetRight < ROWS )&& (tetUnder > 0) && (tetUpper < COLS -1)) {
+                } else if (ch == 'r' ) { //&& (tetRight < ROWS )&& (tetUnder > 0) && (tetUpper < COLS -1)
                     // 右 -> 下． 下 -> 左． 左 -> 上． 上 -> 右
                     // 上と下，右の情報が欲しい
                     printf("\e[%i;%iH rotationCount:%d \n",21,21,rotationCount);
