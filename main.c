@@ -163,7 +163,7 @@ int main() {
             newTetY++;
 
             fflush(stdout);
-            usleep(100 * 1000000 / 60);
+            usleep(5 * 1000000 / 60);
 
             // READ keyboard
             struct timeval tv;
@@ -230,21 +230,15 @@ void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
 }
 void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotation) {
     if(newRotaion != oldRotation) {
-        int oldBlock[BLOCKSIZE][BLOCKSIZE];
         for(int j = 0; j < BLOCKSIZE; j++) {
-            for(int i = 0; i < BLOCKSIZE; i++ ) {
-                oldBlock[i][j] = block[j][BLOCKSIZE - 1 - i];
-            }
-        }
-        for(int j = 0; j < BLOCKSIZE; j++) {
-                int y = tetY - 2 + j;
-                for(int i = 0; i < BLOCKSIZE; i++) {
-                    int x = tetX - 2 + i;
-                    if( oldBlock[j][i] == 1 && starty <= y) {
-                        printf("\e[%i;%iH❤",y,x);
-                    }
+            int y = tetY - 2 + j;
+            for(int i = 0; i < BLOCKSIZE; i++) {
+                // int x = tetX - 2 + i;
+                if( block[j][i] == 1 && starty <= y) {
+                    printf("\e[%i;%iH·",tetY - 2 + BLOCKSIZE - 1 - i, tetX - 2 + j);
                 }
             }
+        }
     }else {
         for(int j = 0; j < BLOCKSIZE; j++) {
             int y = tetY - 2 + j;

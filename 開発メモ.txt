@@ -103,3 +103,20 @@ clearがローテーションしたことを知ってないといけない．
 
 四角の回転による削除が180,270の時うまくいっていない
 L字もうまくいっていない
+
+これで回転の更新はできた
+int oldBlock[BLOCKSIZE][BLOCKSIZE];
+        for(int j = 0; j < BLOCKSIZE; j++) {
+            for(int i = 0; i < BLOCKSIZE; i++ ) {
+                oldBlock[i][j] = block[j][BLOCKSIZE - 1 - i];
+            }
+        }
+        for(int j = 0; j < BLOCKSIZE; j++) {
+                int y = tetY - 2 + j;
+                for(int i = 0; i < BLOCKSIZE; i++) {
+                    int x = tetX - 2 + i;
+                    if( oldBlock[j][i] == 1 && starty <= y) {
+                        printf("\e[%i;%iH❤",y,x);
+                    }
+                }
+        }
