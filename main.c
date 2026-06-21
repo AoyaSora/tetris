@@ -74,7 +74,7 @@ int main() {
 
         printf("└");
         for(int i = 0; i < COLS; i++)
-        printf("-");
+            printf("-");
         printf("┘\n");
         
         // Move cursor back to top
@@ -90,12 +90,32 @@ int main() {
         srand((unsigned int)time(NULL));
         int idx = rand() % BLOCKTYPES;
         idx = 2;
+        int rotationCount=0;
+        int block[BLOCKSIZE][BLOCKSIZE];
         while(!quit && !gameover) {
-            const int (*block)[BLOCKSIZE]  = blocks[idx];
+
+            for(int j = 0; j < BLOCKSIZE; j++) {
+                for(int i = 0; i < BLOCKSIZE; i++ ) {
+                    if(rotationCount == 0) {
+                        block[j][i] = blocks[idx][j][i];
+                    }
+                    else if(rotationCount == 1) {
+                        block[j][i] = blocks[idx][BLOCKSIZE - 1 - i][j];
+                    }
+                    else if(rotationCount == 2) {
+                        block[j][i] = blocks[idx][BLOCKSIZE - 1 - j][BLOCKSIZE -1 - i];
+                    }
+                    else if(rotationCount == 3) {
+                        block[j][i] = blocks[idx][i][BLOCKSIZE - 1 - j];
+                    }
+                }
+            }
+            
             int tetLeft = COLS,tetRight = 0,tetUnder = ROWS;
             for(int j = 0; j < BLOCKSIZE; j++) {
                 int tmpH = tetY + j;
                 for(int i = 0; i < BLOCKSIZE; i++) {
+                    
                     if(block[j][i] == 1) {
                         int tmpW = tetX + i - 4;
                         if(tmpW < tetLeft) tetLeft = tmpW;
@@ -110,7 +130,7 @@ int main() {
 
             // Clear tetris
             if(tetY!=starty) clearBlock(block,beforeTetY-1,beforeTetX);
-            printf("\e[%i;%iHtetX:%02d, tetY:%02d, beforeTetX:%02d, beforeTetY:%02d",20,20,tetX,tetY,beforeTetX,beforeTetY);
+            // printf("\e[%i;%iHtetX:%02d, tetY:%02d, beforeTetX:%02d, beforeTetY:%02d",20,20,tetX,tetY,beforeTetX,beforeTetY);
 
             // Draw tetris
             printBlock(block,tetY,tetX);
@@ -132,6 +152,7 @@ int main() {
                 idx = rand() % BLOCKTYPES;
                 tetY = starty; tetX = startx;
                 beforeTetY = starty; beforeTetX = startx;
+                rotationCount = 0;
             }
             beforeTetY = tetY;
             beforeTetX = tetX;
@@ -162,7 +183,12 @@ int main() {
                 } else if (ch == 's' && tetUnder < ROWS) {
                 beforeTetY = tetY;
                 tetY += 1;
-                } 
+                } else if (ch == 'r') {
+                    printf("\e[%i;%iH rotationCount:%d \n",21,21,rotationCount);
+                    
+                    rotationCount++;
+                    if(rotationCount == 4) rotationCount = 0;
+                }
             }  
         }
         if ( !quit) {
