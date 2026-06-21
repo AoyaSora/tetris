@@ -25,7 +25,7 @@ int main() {
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
     const int square[BLOCKSIZE][BLOCKSIZE] = {
-        {0,0,0,0,0},
+        {1,1,0,0,0},
         {0,0,0,0,0},
         {0,1,1,0,0},
         {0,1,1,0,0},
@@ -89,7 +89,7 @@ int main() {
         // randam seed
         srand((unsigned int)time(NULL));
         int idx = rand() % BLOCKTYPES;
-
+        idx = 2;
         while(!quit && !gameover) {
             const int (*block)[BLOCKSIZE]  = blocks[idx];
             int tetLeft = COLS,tetRight = 0,tetUnder = ROWS;
@@ -211,9 +211,12 @@ int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tet
         for(int i = 0; i < BLOCKSIZE; i ++) {
             int x = tetX - 2 -2 + i;
             if(block[j][i] == 1) {
-                if(y > ROWS - 2 || board[y+1][x] == 1) { // || board[y+1][x] == 1
+                if(y >= 0) {
+                    if(y > ROWS - 2 || board[y+1][x] == 1) { // || board[y+1][x] == 1
                     return 1;
                 }
+                }
+                
             }
         }
     }
