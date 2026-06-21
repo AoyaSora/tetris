@@ -3,8 +3,8 @@
 #include <unistd.h>
 #include <termios.h>
 
-#define COLS 50
-#define ROWS 30
+#define COLS 20 // 列
+#define ROWS 30 // 行
 #define BLOCKSIZE 5
 void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
@@ -15,11 +15,11 @@ int main() {
     // Hide cursor
     // printf("\e[?25l");
         const int square[BLOCKSIZE][BLOCKSIZE] = {
-            {0,0,1,1,0},
             {0,0,1,0,0},
-            {0,1,1,0,0},
-            {0,0,1,1,0},
             {0,0,1,0,0},
+            {0,1,1,1,0},
+            {0,1,0,1,0},
+            {0,1,0,1,0},
         };
   
 
@@ -28,6 +28,7 @@ int main() {
     int board[ROWS][COLS] = {0};
     while (!quit)
     {
+        
         // Render table
         printf("┌");
         for(int i = 0; i < COLS; i ++)
@@ -46,6 +47,7 @@ int main() {
         printf("-");
         printf("┘\n");
         
+        
         // Move cursor back to top
         printf("\e[%iA", ROWS + 2);
 
@@ -63,11 +65,28 @@ int main() {
             // Draw tetris
             printBlock(square,tetY,tetX);
             // printf("\e[%i;%iH#",tetY, tetX);
-
+            // printf("\e[%i;%iH",starty,1); 
+            // for (int j =0; j < ROWS; j++) {
+            // printf("|");
+            // for(int i = 0; i < COLS; i++) 
+            //     printf("%d",board[j][i]);
+            // printf("|\n");
+            // }
+            
             // Touch floar or under Tetris
-            if(isStopTetris(board,square,tetY,tetX) || board[tetY-2][tetX-2] == 1) {
-                // 
-                board[tetY-3][tetX-2] = 1;
+            if(isStopTetris(board,square,tetY,tetX)) {
+                // add tetris to board
+                for(int j = 0; j < BLOCKSIZE; j++) {
+                    int y = tetY - 2 -3 + j;
+                    for(int i = 0; i < BLOCKSIZE; i++ ) {
+                        int x = tetX - 2 -2+ i;
+                        if(square[j][i] == 1) {
+                            board[y][x] = 1;
+                            // printf("\e[%i;%iHx:%d ,y:%d\n",20+c,20,x, y);
+                            // c++;
+                        }
+                    }
+                }
                 
                 tetY = starty; tetX = startx;
             }
@@ -109,11 +128,11 @@ void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX) {
     // touch floar
     for(int j = 0; j < BLOCKSIZE; j ++) {
-        int y = tetY - 2 + j;
+        int y = tetY - 2 -3 + j;
         for(int i = 0; i < BLOCKSIZE; i ++) {
-            int x = tetX - 2 + i;
+            int x = tetX - 2 -2 + i;
             if(block[j][i] == 1) {
-                if(y >= ROWS + 2) {
+                if(y > ROWS - 2 || board[y+1][x] == 1) { // || board[y+1][x] == 1
                     return 1;
                 }
             }
