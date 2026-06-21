@@ -15,28 +15,36 @@ int startx = COLS / 2 + 2;
 int starty = 3;
 int main() {
     // Hide cursor
-    // printf("\e[?25l");
-        const int square[BLOCKSIZE][BLOCKSIZE] = {
-            {0,0,0,0,0},
-            {0,0,0,0,0},
-            {0,1,1,0,0},
-            {0,1,1,0,0},
-            {0,0,0,0,0},
-        };
-        const int rightL[BLOCKSIZE][BLOCKSIZE] = {
-            {0,0,0,0,0},
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,0,1,1,0},
-            {0,0,0,0,0},
-        };
-        const int rocket[BLOCKSIZE][BLOCKSIZE] = {
-            {0,0,1,0,0},
-            {0,0,1,0,0},
-            {0,1,1,1,0},
-            {0,1,0,1,0},
-            {0,1,0,1,0},
-        };
+    printf("\e[?25l");
+
+    // Switch to cannoical mode, dsiable echo
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~( ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    
+    const int square[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,0,0,0},
+        {0,1,1,0,0},
+        {0,1,1,0,0},
+        {0,0,0,0,0},
+    };
+    const int rightL[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,1,0,0},
+        {0,0,1,0,0},
+        {0,0,1,1,0},
+        {0,0,0,0,0},
+    };
+    const int rocket[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,1,0,0},
+        {0,0,1,0,0},
+        {0,1,1,1,0},
+        {0,1,0,1,0},
+        {0,1,0,1,0},
+    };
     /*
     BLOCKSIZE列の二次元配列へのポインタを格納する配列
     blocks[BLOCKTYPES] -> BLOCKTYPES個の要素を持つ配列
@@ -73,7 +81,6 @@ int main() {
         printf("\e[%iA", ROWS + 2);
 
         int gameover = 0;
-        int xdir = 0, ydir = 1;
         int tetY = starty, tetX = startx; // it's base on EscapeSequene
         // top left "·" potition
         printf("\e[%i;%iH❤",starty,2); 
@@ -120,11 +127,42 @@ int main() {
 
             fflush(stdout);
             usleep(5 * 1000000 / 60);
+
+            // READ keyboard
+            struct timeval tv;
+            fd_set fds;
+            tv.tv_sec = 0;
+            tv.tv_usec = 0;
+
+            FD_ZERO(&fds);
+            FD_SET(STDIN_FILENO, &fds);
+            select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
+            if (FD_ISSET(STDIN_FILENO, &fds)) {
+                int ch = getchar();
+                if (ch == 27 || ch == 'q') {
+                quit = 1;
+                } else if (ch == 'a' && tetX != 0) {
+                tetX += -1;
+                } else if (ch == 'd' && tetX != COLS) {
+                tetX += 1;
+                } else if (ch == 's' && tetY != ROWS) {
+                tetY += 1;
+                } 
+            }  
         }
+        if ( !quit) {
+            // Show game over 
+            printf("\e[%i;%iH Game Over! ", ROWS/2, COLS / 2 - 5);
+            printf("\e[%iF", ROWS / 2);
+            fflush(stdout);
+            getchar();
+        } 
        
     }
     // Show cursor
     printf("\e[?25h");
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     return 0;
 }
 
