@@ -23,7 +23,7 @@ int main() {
     newt = oldt;
     newt.c_lflag &= ~( ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    
+
     const int square[BLOCKSIZE][BLOCKSIZE] = {
         {0,0,0,0,0},
         {0,0,0,0,0},
@@ -82,6 +82,7 @@ int main() {
 
         int gameover = 0;
         int tetY = starty, tetX = startx; // it's base on EscapeSequene
+        int beforeTetY = starty, beforeTetX = startx;
         // top left "·" potition
         printf("\e[%i;%iH❤",starty,2); 
 
@@ -92,19 +93,10 @@ int main() {
         while(!quit && !gameover) {
             const int (*block)[BLOCKSIZE]  = blocks[idx];
             // Clear tetris
-            if(tetY!=starty) clearBlock(block,tetY-1,tetX);
-            // printf("\e[%i;%iH·",tetY-1, tetX);
+            if(tetY!=starty) clearBlock(block,beforeTetY-1,beforeTetX);
 
             // Draw tetris
             printBlock(block,tetY,tetX);
-            // printf("\e[%i;%iH#",tetY, tetX);
-            // printf("\e[%i;%iH",starty,1); 
-            // for (int j =0; j < ROWS; j++) {
-            // printf("|");
-            // for(int i = 0; i < COLS; i++) 
-            //     printf("%d",board[j][i]);
-            // printf("|\n");
-            // }
             
             // Touch floar or under Tetris
             if(isStopTetris(board,block,tetY,tetX)) {
@@ -124,6 +116,7 @@ int main() {
                 tetY = starty; tetX = startx;
             }
             tetY++;
+            beforeTetY = tetY;
 
             fflush(stdout);
             usleep(5 * 1000000 / 60);
@@ -141,11 +134,14 @@ int main() {
                 int ch = getchar();
                 if (ch == 27 || ch == 'q') {
                 quit = 1;
-                } else if (ch == 'a' && tetX != 0) {
+                } else if (ch == 'a' && tetX > 2) {
+                beforeTetX = tetX;                
                 tetX += -1;
-                } else if (ch == 'd' && tetX != COLS) {
+                } else if (ch == 'd' && tetX < COLS) {
+                beforeTetX = tetX;             
                 tetX += 1;
-                } else if (ch == 's' && tetY != ROWS) {
+                } else if (ch == 's' && tetY < ROWS) {
+                beforeTetY = tetY;
                 tetY += 1;
                 } 
             }  
@@ -183,7 +179,7 @@ void clearBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
         for(int i = 0; i < BLOCKSIZE; i++) {
             int x = tetX - 2 + i;
             if( block[j][i] == 1 && starty <= y) {
-                printf("\e[%i;%iH·",y,x);
+                printf("\e[%i;%iH❤",y,x);
             }
         }
     }
