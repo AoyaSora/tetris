@@ -39,11 +39,11 @@ int main() {
         {0,0,0,0,0},
     };
     const int rocket[BLOCKSIZE][BLOCKSIZE] = {
+        {1,0,0,0,0},
         {0,1,0,0,0},
-        {0,1,0,0,0},
-        {0,1,0,0,0},
-        {0,1,0,0,0},
-        {0,0,0,0,0},
+        {0,0,1,0,0},
+        {0,0,0,1,0},
+        {1,1,1,1,1},
     };
     /*
     BLOCKSIZE列の二次元配列へのポインタを格納する配列
@@ -228,18 +228,23 @@ void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
         }
     }
 }
-void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion) {
-    if(newRotaion != oldRotaion) {
-        int y = tetY - 2 ; int x = tetX -2; // i,jのために左上基準
+void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotation) {
+    if(newRotaion != oldRotation) {
+        int oldBlock[BLOCKSIZE][BLOCKSIZE];
         for(int j = 0; j < BLOCKSIZE; j++) {
-            for(int i = 0; i < BLOCKSIZE; i++) {
-                if( block[j][i] == 1 && starty <= y) {
-                    int rx = x +  BLOCKSIZE -1 - i;
-                    int ry = y +  j;
-                    printf("\e[%i;%iH❤",ry, rx);                  
-                }
+            for(int i = 0; i < BLOCKSIZE; i++ ) {
+                oldBlock[i][j] = block[j][BLOCKSIZE - 1 - i];
             }
         }
+        for(int j = 0; j < BLOCKSIZE; j++) {
+                int y = tetY - 2 + j;
+                for(int i = 0; i < BLOCKSIZE; i++) {
+                    int x = tetX - 2 + i;
+                    if( oldBlock[j][i] == 1 && starty <= y) {
+                        printf("\e[%i;%iH❤",y,x);
+                    }
+                }
+            }
     }else {
         for(int j = 0; j < BLOCKSIZE; j++) {
             int y = tetY - 2 + j;
