@@ -6,8 +6,59 @@
 
 #define COLS 20 // 列
 #define ROWS 30 // 行
-#define BLOCKTYPES 3
+#define BLOCKTYPES 6
 #define BLOCKSIZE 5
+const int square[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,0,0,0},
+        {0,0,1,1,0},
+        {0,0,1,1,0},
+        {0,0,0,0,0},
+    };
+    const int rightL[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,1,0,0},
+        {0,0,1,0,0},
+        {0,0,1,1,0},
+        {0,0,0,0,0},
+    };
+    const int rocket[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,1,0,0},
+        {0,1,1,1,0},
+        {0,1,0,1,0},
+        {0,0,0,0,0},
+    };
+    const int leftL[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,1,0,0},
+        {0,0,1,0,0},
+        {0,1,1,0,0},
+        {0,0,0,0,0},
+    };
+    const int n[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,0,0,0},
+        {0,0,1,1,0},
+        {0,1,1,0,0},
+        {0,0,0,0,0},
+    };
+    const int inverseN[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,0,0,0},
+        {0,1,1,0,0},
+        {0,0,1,1,0},
+        {0,0,0,0,0},
+    };
+    const int l[BLOCKSIZE][BLOCKSIZE] = {
+        {0,0,0,0,0},
+        {0,0,1,0,0},
+        {0,0,1,0,0},
+        {0,0,1,0,0},
+        {0,0,0,0,0},
+    };
+const int (*blocks[BLOCKTYPES])[BLOCKSIZE] = {square,rightL,leftL,n,inverseN,l};
+
 void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion);
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX);
@@ -25,27 +76,6 @@ int main() {
     newt.c_lflag &= ~( ICANON | ECHO);
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
-    const int square[BLOCKSIZE][BLOCKSIZE] = {
-        {0,0,0,0,0},
-        {0,0,0,0,0},
-        {0,1,1,0,0},
-        {0,1,1,0,0},
-        {0,0,0,0,0},
-    };
-    const int rightL[BLOCKSIZE][BLOCKSIZE] = {
-        {0,0,1,0,0},
-        {0,0,1,0,0},
-        {0,0,1,0,0},
-        {0,0,1,0,0},
-        {0,0,1,0,0},
-    };
-    const int rocket[BLOCKSIZE][BLOCKSIZE] = {
-        {0,0,0,0,0},
-        {0,0,1,0,0},
-        {0,1,1,1,0},
-        {0,1,0,1,0},
-        {0,0,0,0,0},
-    };
     /*
     BLOCKSIZE列の二次元配列へのポインタを格納する配列
     blocks[BLOCKTYPES] -> BLOCKTYPES個の要素を持つ配列
@@ -53,13 +83,13 @@ int main() {
     (*blocks[BLOCKTYPES])[BLOCKSIZE] -> そのポインタはBLOCKSIZE個のintからなる配列を指す
     */
     
-    const int (*blocks[BLOCKTYPES])[BLOCKSIZE] = {square,rightL,rocket};
     
     int quit = 0;
     int tetris[BLOCKSIZE][BLOCKSIZE];
     int board[ROWS][COLS] = {0};
     while (!quit)
     {
+        int point = 0;
         // Render table
         printf("┌");
         for(int i = 0; i < COLS; i ++)
@@ -91,12 +121,10 @@ int main() {
         // randam seed
         srand((unsigned int)time(NULL));
         int idx = rand() % BLOCKTYPES;
-        idx = 1;
         int rotationCount=0;
         int block[BLOCKSIZE][BLOCKSIZE];
         int isRotation = 0;
         while(!quit && !gameover) {
-            idx = 1;
             for(int j = 0; j < BLOCKSIZE; j++) {
                 for(int i = 0; i < BLOCKSIZE; i++ ) {
                     if(newRotation == 0) {
@@ -159,7 +187,7 @@ int main() {
                 newTetY = starty; newTetX = startx;
                 oldTetY = starty; oldTetX = startx;
                 rotationCount = 0; isRotation = 0;
-                oldRotation = newRotation;
+                oldRotation = 0;
             }
             oldTetY = newTetY;
             oldTetX = newTetX;
@@ -167,7 +195,7 @@ int main() {
 
             /*-----------------time-----------------*/
             fflush(stdout);
-            usleep(8 * 1000000 / 60);
+            usleep(12 * 1000000 / 60);
 
             // READ keyboard
             struct timeval tv;
@@ -190,9 +218,9 @@ int main() {
                 } else if (ch == 'd' && tetRight + newTetX - 2 < COLS -1) {
                 newTetX += 1;
                 } 
-                // else if (ch == 's' && tetUnder + newTetY < ROWS) {
-                // newTetY += 1;
-                // } 
+                else if (ch == 's' && tetUnder + newTetY < ROWS-1) {
+                newTetY += 1;
+                } 
                 else if (ch == 'r' && (tetUnder + newTetX - 2 > 0) && (tetRight + newTetY  < ROWS) && (tetUpper + newTetX - 2 < COLS -1) ) { 
                     oldRotation = newRotation;
                     newRotation++;
@@ -233,7 +261,7 @@ void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int 
             int y = tetY - 2 + j;
             for(int i = 0; i < BLOCKSIZE; i++) {
                 // int x = tetX - 2 + i;
-                if( block[j][i] == 1 && starty <= y) {
+                if( block[j][i] == 1 && starty < y) {
                     printf("\e[%i;%iH·",tetY - 2 + BLOCKSIZE - 1 - i, tetX - 2 + j);
                 }
             }
@@ -299,13 +327,13 @@ void clearRow(int(* board)[COLS]) {
         }
     }
         // clear screen
-        for(int j = 0; j < ROWS; j++) {
-            if(clearRow[j] == 1) {
-                for(int i = 0; i < COLS; i++) {
-                printf("\e[%i;%iH❤",3+j,2+i);
-            }
-            }
-        }
+        // for(int j = 0; j < ROWS; j++) {
+        //     if(clearRow[j] == 1) {
+        //         for(int i = 0; i < COLS; i++) {
+        //         printf("\e[%i;%iH❤",3+j,2+i);
+        //     }
+        //     }
+        // }
         // change board matrix under rowNum
         // for(int j = ROWS - rowNum -1; j >= 0 ; j --) {
         //     for(int i = 0; i < COLS; i++) {
@@ -315,19 +343,30 @@ void clearRow(int(* board)[COLS]) {
         // change board from under
         for(int j = ROWS-1; j >= 0; j--) {
             if(clearRow[j]) {
-                for(int l = ROWS-1-j; l >= 0; l--){
+                for(int l = j; l > 0; l--){
                     for(int m = 0; m < COLS; m++) {
-                        board[l][m] = board[l+1][m];
+                        board[l][m] = board[l-1][m];
                     }
+                }
+                // clearRowが変わっていないからダメ
+                /*
+                clearRow= {0,0,0,0,...0,1,1}
+                clearRow= {0,0,0,0,...0,0,1}
+                要素番号の指定とそれより小さい値を右にずらす
+                */
+                for(int i = ROWS-1; i > 0; i--) {
+                    clearRow[i] = clearRow[i-1];
+                }
+                j++;
+            }
+        }
+        if(rowNum) {
+            for(int j = 0; j < ROWS; j++) {
+                for(int i = 0; i < COLS; i++) {
+                    if(board[j][i]) printf("\e[%i;%iH#",3+j,2+i);
+                    else printf("\e[%i;%iH·",3+j,2+i);
                 }
             }
         }
-        for(int j = 0; j < ROWS; j++) {
-            for(int i = 0; i < COLS; i++) {
-                if(board[j][i]) printf("\e[%i;%iH#",3+j,2+i);
-                else printf("\e[%i;%iH·",3+j,2+i);
-            }
-        }
-        
     return;
 }
