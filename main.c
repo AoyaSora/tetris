@@ -11,6 +11,7 @@
 void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion);
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX);
+void rowClear(int(* board)[COLS]);
 int startx = COLS / 2 + 2;
 int starty = 3;
 int main() {
@@ -95,7 +96,7 @@ int main() {
         int block[BLOCKSIZE][BLOCKSIZE];
         int isRotation = 0;
         while(!quit && !gameover) {
-
+            idx = 1;
             for(int j = 0; j < BLOCKSIZE; j++) {
                 for(int i = 0; i < BLOCKSIZE; i++ ) {
                     if(newRotation == 0) {
@@ -129,7 +130,6 @@ int main() {
             // printf("\e[%i;%iHtetX:%02d, tetLeft:%02d ,tetRight:%02d\n",20,20, tetX, tetLeft, tetRight);
 
 
-
             // Clear tetris
             if(newTetY!=starty) clearBlock(block,oldTetY,oldTetX,newRotation, oldRotation);
             // printf("\e[%i;%iHtetX:%02d, tetY:%02d, oldTetX:%02d, oldTetY:%02d",20,20,tetX,tetY,oldTetX,oldTetY);
@@ -152,8 +152,8 @@ int main() {
                     }
                 }
                 // Clear tetris Rows
+                rowClear(board);
                 
-
                 // set next block
                 idx = rand() % BLOCKTYPES;
                 newTetY = starty; newTetX = startx;
@@ -189,17 +189,13 @@ int main() {
                 newTetX += -1;
                 } else if (ch == 'd' && tetRight + newTetX - 2 < COLS -1) {
                 newTetX += 1;
-                } else if (ch == 's' && tetUnder + newTetY < ROWS) {
-                newTetY += 1;
-                } else if (ch == 'r' && (tetUnder + newTetX - 2 > 0) && (tetRight + newTetY  < ROWS) && (tetUpper + newTetX - 2 < COLS -1) ) { 
-                    // printf("\e[%i;%iH  rotationLeft:%02d, rotaionUnder:%02d \n",23,22,tetUnder + newTetX - 2,tetRight + newTetY - 2);
-                    // 右 -> 下． 下 -> 左． 左 -> 上． 上 -> 右
-                    // 上と下，右の情報が欲しい
-                    // ここで端でも回転させるのなら，newTetX+-1する必要がある
+                } 
+                // else if (ch == 's' && tetUnder + newTetY < ROWS) {
+                // newTetY += 1;
+                // } 
+                else if (ch == 'r' && (tetUnder + newTetX - 2 > 0) && (tetRight + newTetY  < ROWS) && (tetUpper + newTetX - 2 < COLS -1) ) { 
                     oldRotation = newRotation;
                     newRotation++;
-                    
-                    // if(rotationCount == 4) rotationCount = 0;
                     if(newRotation == 4) newRotation = 0;
                 }
             }   
@@ -256,7 +252,7 @@ void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int 
 }
 
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX) {
-    // touch floar
+    // touch floar or block
     for(int j = 0; j < BLOCKSIZE; j ++) {
         int y = tetY - 2 -3 + j;
         for(int i = 0; i < BLOCKSIZE; i ++) {
@@ -271,6 +267,46 @@ int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tet
             }
         }
     }
-    // compare board and block
     return 0;
+}
+
+/*
+function name: rowClear
+argement: *board[][BLOCKSIZE]
+return: nothing
+
+investigation board matrix under to top until find "0".
+store row number for how many rows delete. 
+
+flow: 
+check how many rows complete. 
+clear rows from the screen.
+change board matrix.
+*/
+void rowClear(int(* board)[COLS]) {
+    int isAlloneRow = 0;
+    int clearRow[ROWS] = {0};
+    int rowNum = 0;
+    // search
+    for(int j = ROWS-1; j >= 0; j--) {
+        for(int i = 0; i < COLS; i++) {
+            if(!board[j][i]) isAlloneRow = 1; break;
+        }
+        if(!isAlloneRow) clearRow[j] = 1; rowNum ++; 
+    }
+        // clear screen
+        for(int j = 0; j < ROWS; j++) {
+            if(clearRow[j] == 1) {
+                for(int i = 0; i < COLS; i++) {
+                printf("\e[%i;%iH❤",3+j,2+i);
+            }
+            }
+        }
+        // change board matrix under rowNum
+        for(int j = ROWS - rowNum -1; j >= 0 ; j --) {
+            for(int i = 0; i < COLS; i++) {
+                board[j+rowNum][i] = board[j][i];
+            }
+        }
+    return;
 }
