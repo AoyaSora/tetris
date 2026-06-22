@@ -35,15 +35,15 @@ int main() {
         {0,0,0,0,0},
         {0,0,1,0,0},
         {0,0,1,0,0},
-        {0,0,1,1,0},
-        {0,0,0,0,0},
+        {0,0,1,0,0},
+        {0,0,1,0,0},
     };
     const int rocket[BLOCKSIZE][BLOCKSIZE] = {
-        {1,0,0,0,0},
-        {0,1,0,0,0},
+        {0,0,0,0,0},
         {0,0,1,0,0},
-        {0,0,0,1,0},
-        {1,1,1,1,1},
+        {0,1,1,1,0},
+        {0,1,0,1,0},
+        {0,0,0,0,0},
     };
     /*
     BLOCKSIZE列の二次元配列へのポインタを格納する配列
@@ -90,7 +90,7 @@ int main() {
         // randam seed
         srand((unsigned int)time(NULL));
         int idx = rand() % BLOCKTYPES;
-        idx = 2;
+        idx = 1;
         int rotationCount=0;
         int block[BLOCKSIZE][BLOCKSIZE];
         int isRotation = 0;
@@ -112,14 +112,13 @@ int main() {
                     }
                 }
             }
-            
-            int tetLeft = COLS,tetRight = 0,tetUpper = 0,tetUnder = ROWS;
+            // based on block 
+            int tetLeft = 2,tetRight = -2,tetUpper = -2,tetUnder = 2;
             for(int j = 0; j < BLOCKSIZE; j++) {
-                int tmpH = newTetY + j;
+                int tmpH = j-2;
                 for(int i = 0; i < BLOCKSIZE; i++) {
-                    
                     if(block[j][i] == 1) {
-                        int tmpW = newTetX + i - 4;
+                        int tmpW = i - 2;
                         if(tmpW < tetLeft) tetLeft = tmpW;
                         if(tmpW > tetRight) tetRight = tmpW;
                         if(tmpH < tetUnder) tetUnder = tmpH;
@@ -152,6 +151,10 @@ int main() {
                         }
                     }
                 }
+                // Clear tetris Rows
+                
+
+                // set next block
                 idx = rand() % BLOCKTYPES;
                 newTetY = starty; newTetX = startx;
                 oldTetY = starty; oldTetX = startx;
@@ -162,8 +165,9 @@ int main() {
             oldTetX = newTetX;
             newTetY++;
 
+            /*-----------------time-----------------*/
             fflush(stdout);
-            usleep(5 * 1000000 / 60);
+            usleep(8 * 1000000 / 60);
 
             // READ keyboard
             struct timeval tv;
@@ -175,31 +179,30 @@ int main() {
             FD_SET(STDIN_FILENO, &fds);
             select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
             oldRotation = newRotation;
+            // printf("\e[%i;%iH newTetX:%02d, newTetY:%02d, tetUdner:%02d\n",22,22,newTetX-2,newTetY-2,tetUnder);
             if (FD_ISSET(STDIN_FILENO, &fds)) {
                 int ch = getchar();
+                tcflush(STDIN_FILENO, TCIFLUSH);
                 if (ch == 27 || ch == 'q') {
                 quit = 1;
-                } else if (ch == 'a' && tetLeft > 0) {
+                } else if (ch == 'a' && tetLeft + newTetX - 2 > 0) {
                 newTetX += -1;
-                } else if (ch == 'd' && tetRight < COLS-1) {
+                } else if (ch == 'd' && tetRight + newTetX - 2 < COLS -1) {
                 newTetX += 1;
-                } else if (ch == 's' && tetUnder < ROWS) {
+                } else if (ch == 's' && tetUnder + newTetY < ROWS) {
                 newTetY += 1;
-                } else if (ch == 'r' ) { //&& (tetRight < ROWS )&& (tetUnder > 0) && (tetUpper < COLS -1)
+                } else if (ch == 'r' && (tetUnder + newTetX - 2 > 0) && (tetRight + newTetY  < ROWS) && (tetUpper + newTetX - 2 < COLS -1) ) { 
+                    // printf("\e[%i;%iH  rotationLeft:%02d, rotaionUnder:%02d \n",23,22,tetUnder + newTetX - 2,tetRight + newTetY - 2);
                     // 右 -> 下． 下 -> 左． 左 -> 上． 上 -> 右
                     // 上と下，右の情報が欲しい
-                    // isRotation = 1;
-                    // rotationCount++;
+                    // ここで端でも回転させるのなら，newTetX+-1する必要がある
                     oldRotation = newRotation;
                     newRotation++;
                     
                     // if(rotationCount == 4) rotationCount = 0;
                     if(newRotation == 4) newRotation = 0;
                 }
-            }  
-            printf("\e[%i;%iH oldRotation:%02d \n",21,21,oldRotation);
-            printf("\e[%i;%iH newRotation:%02d \n",22,21,newRotation);
- 
+            }   
         }
         if ( !quit) {
             // Show game over 
