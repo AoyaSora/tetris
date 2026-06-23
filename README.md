@@ -1,8 +1,9 @@
 ### About 
 Make Tetris by C language and Escape Sequence.
 ### How to use 
-- 'a' key : move the tetris to left
-- 'd' key : move the tetris to right
+- 'a' key : move the tetris piece to left
+- 'd' key : move the tetris piece to right
+- 's' key : move the tetris piece to down
 - 'r' key : rotate the tetris piece clockwise
 - 'q' key : finish this game.
 
