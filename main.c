@@ -218,7 +218,7 @@ int main() {
 
             // Draw tetris
             printBlock(block,newTetY,newTetX);
-            
+            int c = 0;
             // Touch floar or under Tetris
             if(isStopTetris(board,block,newTetY,newTetX)) {
                 // add tetris to board
@@ -228,11 +228,16 @@ int main() {
                         int x = newTetX - 2 -2+ i;
                         if(block[j][i] == 1) {
                             board[y][x] = 1;
-                            // printf("\e[%i;%iHx:%d ,y:%d\n",20+c,20,x, y);
-                            // c++;
+                            c++;
                         }
                     }
                 }
+                printf("\e[%i;%iHboard[%d][%d]:%d\n",19,20,0,COLS/2 - 1,board[0][COLS/2 - 1]);
+                if(board[0][COLS/2 - 1] == 1 || board[0][COLS/2] == 1 ) {
+                    gameover = 1; 
+                    break;
+                }
+
                 // Clear tetris Rows
                 addScore = clearRow(board);
 
@@ -295,9 +300,13 @@ int main() {
         if ( !quit) {
             // Show game over 
             printf("\e[%i;%iH Game Over! ", ROWS/2, COLS / 2 - 5);
-            printf("\e[%iF", ROWS / 2);
+            printf("\e[%i;%iH",1,1);
             fflush(stdout);
-            getchar();
+            int ch = getchar();
+            tcflush(STDIN_FILENO, TCIFLUSH);
+            if (ch == 27 || ch == 'q') {
+                quit = 1;
+            }
         } 
        
     }
