@@ -70,6 +70,8 @@ int clearRow(int(* board)[COLS]);
 int startx = COLS / 2 + 2;
 int starty = 3;
 int main() {
+    // Clear terminal
+    printf("\033[2J\033[H"); 
     // Hide cursor
     printf("\e[?25l");
 
@@ -302,6 +304,7 @@ int main() {
             printf("\e[%i;%iH Game Over! ", ROWS/2, COLS / 2 - 5);
             printf("\e[%i;%iH",1,1);
             fflush(stdout);
+            // reset matrix
             int ch = getchar();
             tcflush(STDIN_FILENO, TCIFLUSH);
             if (ch == 27 || ch == 'q') {
