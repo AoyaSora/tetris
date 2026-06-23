@@ -95,9 +95,10 @@ int main() {
     int board[ROWS][COLS] = {0};
     while (!quit)
     {
+        printf("\033[H"); 
         int point = 0;
         // Render table
-        printf("┌");
+        printf("\e[1B┌");
         for(int i = 0; i < COLS; i ++)
         printf("-");
         printf("┐\n");
@@ -291,7 +292,9 @@ int main() {
                 } 
                 else if (ch == 's' && tetUnder + newTetY < ROWS-1) {
                 newTetY += 1;
-                } 
+                } else if (ch == 27 || ch == 'q') {
+                    quit = 1;
+                }
                 else if (ch == 'r' && (tetUnder + newTetX - 2 > 0) && (tetRight + newTetY  < ROWS) && (tetUpper + newTetX - 2 < COLS -1) ) { 
                     oldRotation = newRotation;
                     newRotation++;
@@ -305,8 +308,14 @@ int main() {
             printf("\e[%i;%iH",1,1);
             fflush(stdout);
             // reset matrix
+            for(int j = 0; j< ROWS; j++) {
+                for(int i = 0; i < COLS; i++) {
+                    board[j][i] = 0;
+                }
+            }
             int ch = getchar();
             tcflush(STDIN_FILENO, TCIFLUSH);
+            // printf("\e[%i;%iH|···········|", ROWS/2, COLS / 2 - 5);
             if (ch == 27 || ch == 'q') {
                 quit = 1;
             }
