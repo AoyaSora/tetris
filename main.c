@@ -4,8 +4,12 @@
 #include <termios.h>
 #include <time.h>
 
-#define COLS 20 // 列
-#define ROWS 30 // 行
+#define COLS 10 // 列
+#define ROWS 20 // 行
+#define SCORECOLS 10
+#define SCOREROWS 1
+#define NEXTCOLS 5
+#define NEXTROWS 5
 #define BLOCKTYPES 6
 #define BLOCKSIZE 5
 const int square[BLOCKSIZE][BLOCKSIZE] = {
@@ -62,7 +66,7 @@ const int (*blocks[BLOCKTYPES])[BLOCKSIZE] = {square,rightL,leftL,n,inverseN,l};
 void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion);
 void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
 int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX);
-void clearRow(int(* board)[COLS]);
+int clearRow(int(* board)[COLS]);
 int startx = COLS / 2 + 2;
 int starty = 3;
 int main() {
@@ -107,7 +111,46 @@ int main() {
         for(int i = 0; i < COLS; i++)
             printf("-");
         printf("┘\n");
+
+        // Render Score
+        printf("\e[%i;%iH┌",3,COLS+3);
+        for(int i = 0; i < SCORECOLS; i ++)
+        printf("-");
+        printf("┐\n");
         
+        for (int j =0; j < SCOREROWS; j++) {
+        printf("\e[%iC|",COLS+2);
+        for(int i = 0; i < SCORECOLS; i++) 
+            printf(" ");
+        printf("|\n");
+        }
+
+        printf("\e[%iC└",COLS+2);
+        for(int i = 0; i < SCORECOLS; i++)
+            printf("-");
+        printf("┘\n");
+        printf("\e[%i;%iHSCORE:",2,COLS+4);
+
+        // Render next block 
+        printf("\e[%i;%iH┌",6+SCOREROWS,COLS+4);
+        for(int i = 0; i < NEXTCOLS; i ++)
+        printf("-");
+        printf("┐\n");
+        
+        for (int j =0; j < NEXTROWS; j++) {
+        printf("\e[%iC|",COLS+3);
+        for(int i = 0; i < NEXTCOLS; i++) 
+            printf(" ");
+        printf("|\n");
+        }
+
+        printf("\e[%iC└",COLS+3);
+        for(int i = 0; i < NEXTCOLS; i++)
+            printf("-");
+        printf("┘\n");
+        printf("\e[%i;%iHNEXT:",5+SCOREROWS,COLS+5);
+
+
         // Move cursor back to top
         printf("\e[%iA", ROWS + 2);
 
@@ -115,15 +158,19 @@ int main() {
         int newTetY = starty, newTetX = startx; // it's base on EscapeSequene
         int oldTetY = starty, oldTetX = startx;
         int oldRotation = 0, newRotation = 0;
+        int addScore = 0, newScore = 0;
         // top left "·" potition
         printf("\e[%i;%iH❤",starty,2); 
 
         // randam seed
         srand((unsigned int)time(NULL));
         int idx = rand() % BLOCKTYPES;
+        int nextIdx = rand() % BLOCKTYPES;
         int rotationCount=0;
         int block[BLOCKSIZE][BLOCKSIZE];
         int isRotation = 0;
+
+        // Game loop
         while(!quit && !gameover) {
             for(int j = 0; j < BLOCKSIZE; j++) {
                 for(int i = 0; i < BLOCKSIZE; i++ ) {
@@ -156,7 +203,14 @@ int main() {
                 }
             }
             // printf("\e[%i;%iHtetX:%02d, tetLeft:%02d ,tetRight:%02d\n",20,20, tetX, tetLeft, tetRight);
-
+            // Render next block
+            for(int j = 0; j < BLOCKSIZE; j++) {
+                printf("\e[%i;%iH",SCOREROWS+7+j,COLS+5); // set left top
+                for(int i = 0; i < BLOCKSIZE; i++) {
+                    if(blocks[nextIdx][j][i] == 1) printf("#");
+                    else printf("·");
+                }
+            }
 
             // Clear tetris
             if(newTetY!=starty) clearBlock(block,oldTetY,oldTetX,newRotation, oldRotation);
@@ -180,14 +234,24 @@ int main() {
                     }
                 }
                 // Clear tetris Rows
-                clearRow(board);
+                addScore = clearRow(board);
+
+                // show score
+                addScore *= 1000;
+                if(addScore!=0) {
+                    newScore += addScore;
+                    printf("\e[%i;%iH%010d",4,COLS+4,newScore);
+                    addScore = 0;
+                }
                 
-                // set next block
-                idx = rand() % BLOCKTYPES;
+                // set next 
+                idx = nextIdx;
+                nextIdx = rand() % BLOCKTYPES;
                 newTetY = starty; newTetX = startx;
                 oldTetY = starty; oldTetX = startx;
                 rotationCount = 0; isRotation = 0;
-                oldRotation = 0;
+                newRotation = 0; oldRotation = 0;
+
             }
             oldTetY = newTetY;
             oldTetX = newTetX;
@@ -301,7 +365,7 @@ int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tet
 /*
 function name: clearRow
 argement: *board[][BLOCKSIZE]
-return: nothing
+return: clear row num
 
 investigation board matrix under to top until find "0".
 store row number for how many rows delete. 
@@ -311,7 +375,7 @@ check how many rows complete.
 clear rows from the screen.
 change board matrix.
 */
-void clearRow(int(* board)[COLS]) {
+int clearRow(int(* board)[COLS]) {
     int isAlloneRow = 0;
     int clearRow[ROWS] = {0};
     int rowNum = 0;
@@ -368,5 +432,5 @@ void clearRow(int(* board)[COLS]) {
                 }
             }
         }
-    return;
+    return rowNum;
 }
