@@ -5,15 +5,18 @@ Make Tetris by C language and Escape Sequence.
 - 'd' key : move the tetris piece to right
 - 's' key : move the tetris piece to down
 - 'r' key : rotate the tetris piece clockwise
-- 'q' key : finish this game.
+- 'q' key : finish this game.  
+[!WARNING]
+You can't use arrow key! It'll be stopped. If you lost your cursor in your terminal, execute 
+```
+$ tput cnorm
+```
 
 ### Files
 | File name | explain |
 | --------- | ------- |
 | main.c | tetris file |
 | tetris | tetris execute file |
-
-
 
 ### Compile process 
 ```
