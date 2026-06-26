@@ -63,10 +63,10 @@ const int square[BLOCKSIZE][BLOCKSIZE] = {
     };
 const int (*blocks[BLOCKTYPES])[BLOCKSIZE] = {square,rightL,leftL,n,inverseN,l};
 
-void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion);
-void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX);
-int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX);
-int clearRow(int(* board)[COLS]);
+void clearBlock(int (*block)[BLOCKSIZE][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion);
+void printBlock(const int (*block)[BLOCKSIZE][BLOCKSIZE], int tetY, int tetX);
+int isStopTetris(int (*board)[ROWS][COLS],const int (*block)[BLOCKSIZE][BLOCKSIZE],int tetY,int tetX);
+int clearRow(int(*board)[ROWS][COLS]);
 int startx = COLS / 2 + 2;
 int starty = 3;
 int main() {
@@ -216,14 +216,14 @@ int main() {
             }
 
             // Clear tetris
-            if(newTetY!=starty) clearBlock(block,oldTetY,oldTetX,newRotation, oldRotation);
+            if(newTetY!=starty) clearBlock(&block,oldTetY,oldTetX,newRotation, oldRotation);
             // printf("\e[%i;%iHtetX:%02d, tetY:%02d, oldTetX:%02d, oldTetY:%02d",20,20,tetX,tetY,oldTetX,oldTetY);
 
             // Draw tetris
-            printBlock(block,newTetY,newTetX);
+            printBlock(&block,newTetY,newTetX);
             int c = 0;
             // Touch floar or under Tetris
-            if(isStopTetris(board,block,newTetY,newTetX)) {
+            if(isStopTetris(&board,&block,newTetY,newTetX)) {
                 // add tetris to board
                 for(int j = 0; j < BLOCKSIZE; j++) {
                     int y = newTetY - 2 -3 + j;
@@ -242,7 +242,7 @@ int main() {
                 }
 
                 // Clear tetris Rows
-                addScore = clearRow(board);
+                addScore = clearRow(&board);
 
                 // show score
                 addScore *= 1000;
@@ -329,24 +329,24 @@ int main() {
     return 0;
 }
 
-void printBlock(const int block[][BLOCKSIZE], int tetY, int tetX) {
+void printBlock(const int (*block)[BLOCKSIZE][BLOCKSIZE], int tetY, int tetX) {
     for(int j = 0; j < BLOCKSIZE; j++) {
         int y = tetY - 2 + j;
         for(int i = 0; i < BLOCKSIZE; i++) {
             int x = tetX - 2 + i;
-            if( block[j][i] == 1 && starty <= y) {
+            if( (*block)[j][i] == 1 && starty <= y) {
                 printf("\e[%i;%iH#",y,x);
             }
         }
     }
 }
-void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotation) {
+void clearBlock(int (*block)[BLOCKSIZE][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotation) {
     if(newRotaion != oldRotation) {
         for(int j = 0; j < BLOCKSIZE; j++) {
             int y = tetY - 2 + j;
             for(int i = 0; i < BLOCKSIZE; i++) {
                 // int x = tetX - 2 + i;
-                if( block[j][i] == 1 && starty < y) {
+                if( (*block)[j][i] == 1 && starty < y) {
                     printf("\e[%i;%iH·",tetY - 2 + BLOCKSIZE - 1 - i, tetX - 2 + j);
                 }
             }
@@ -356,7 +356,7 @@ void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int 
             int y = tetY - 2 + j;
             for(int i = 0; i < BLOCKSIZE; i++) {
                 int x = tetX - 2 + i;
-                if( block[j][i] == 1 && starty <= y) {
+                if( (*block)[j][i] == 1 && starty <= y) {
                     printf("\e[%i;%iH·",y,x);
                 }
             }
@@ -364,15 +364,15 @@ void clearBlock(int block[][BLOCKSIZE], int tetY, int tetX, int newRotaion, int 
     } 
 }
 
-int isStopTetris(int board[][COLS],const int block[][BLOCKSIZE],int tetY,int tetX) {
+int isStopTetris(int (*board)[ROWS][COLS],const int (*block)[BLOCKSIZE][BLOCKSIZE],int tetY,int tetX) {
     // touch floar or block
     for(int j = 0; j < BLOCKSIZE; j ++) {
         int y = tetY - 2 -3 + j;
         for(int i = 0; i < BLOCKSIZE; i ++) {
             int x = tetX - 2 -2 + i;
-            if(block[j][i] == 1) {
+            if((*block)[j][i] == 1) {
                 if(y >= 0) {
-                    if(y > ROWS - 2 || board[y+1][x] == 1) { // || board[y+1][x] == 1
+                    if(y > ROWS - 2 || (*board)[y+1][x] == 1) { // || board[y+1][x] == 1
                     return 1;
                 }
                 }
@@ -396,24 +396,24 @@ check how many rows complete.
 clear rows from the screen.
 change board matrix.
 */
-int clearRow(int(* board)[COLS]) {
+int clearRow(int(*board)[ROWS][COLS]) {
     int isAlloneRow = 0;
-    int clearRow[ROWS] = {0};
+    int clearRowNum[ROWS] = {0};
     int rowNum = 0;
     // search
     for(int j = 0; j < ROWS; j++) {
         isAlloneRow = 0;
         for(int i = 0; i < COLS; i++) {
-            if(board[j][i] == 0) isAlloneRow = 1;
+            if((*board)[j][i] == 0) isAlloneRow = 1;
         }
         if(isAlloneRow != 1) {
-            clearRow[j] = 1;
+            clearRowNum[j] = 1;
             rowNum ++; 
         }
     }
         // clear screen
         // for(int j = 0; j < ROWS; j++) {
-        //     if(clearRow[j] == 1) {
+        //     if(clearRowNum[j] == 1) {
         //         for(int i = 0; i < COLS; i++) {
         //         printf("\e[%i;%iH❤",3+j,2+i);
         //     }
@@ -427,20 +427,20 @@ int clearRow(int(* board)[COLS]) {
         // }
         // change board from under
         for(int j = ROWS-1; j >= 0; j--) {
-            if(clearRow[j]) {
+            if(clearRowNum[j]) {
                 for(int l = j; l > 0; l--){
                     for(int m = 0; m < COLS; m++) {
-                        board[l][m] = board[l-1][m];
+                        (*board)[l][m] = (*board)[l-1][m];
                     }
                 }
-                // clearRowが変わっていないからダメ
+                // clearRowNumが変わっていないからダメ
                 /*
-                clearRow= {0,0,0,0,...0,1,1}
-                clearRow= {0,0,0,0,...0,0,1}
+                clearRowNum= {0,0,0,0,...0,1,1}
+                clearRowNum= {0,0,0,0,...0,0,1}
                 要素番号の指定とそれより小さい値を右にずらす
                 */
                 for(int i = ROWS-1; i > 0; i--) {
-                    clearRow[i] = clearRow[i-1];
+                    clearRowNum[i] = clearRowNum[i-1];
                 }
                 j++;
             }
@@ -448,7 +448,7 @@ int clearRow(int(* board)[COLS]) {
         if(rowNum) {
             for(int j = 0; j < ROWS; j++) {
                 for(int i = 0; i < COLS; i++) {
-                    if(board[j][i]) printf("\e[%i;%iH#",3+j,2+i);
+                    if((*board)[j][i]) printf("\e[%i;%iH#",3+j,2+i);
                     else printf("\e[%i;%iH·",3+j,2+i);
                 }
             }
