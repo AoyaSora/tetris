@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <time.h>
+#include <math.h>
 
 #define COLS 10 // 列
 #define ROWS 20 // 行
@@ -12,6 +13,7 @@
 #define NEXTROWS 5
 #define BLOCKTYPES 6
 #define BLOCKSIZE 5
+
 const int square[BLOCKSIZE][BLOCKSIZE] = {
         {0,0,0,0,0},
         {0,0,0,0,0},
@@ -64,7 +66,7 @@ const int square[BLOCKSIZE][BLOCKSIZE] = {
 const int (*blocks[BLOCKTYPES])[BLOCKSIZE] = {square,rightL,leftL,n,inverseN,l};
 
 void clearBlock(int (*block)[BLOCKSIZE][BLOCKSIZE], int tetY, int tetX, int newRotaion, int oldRotaion);
-void printBlock(const int (*block)[BLOCKSIZE][BLOCKSIZE], int tetY, int tetX);
+void printBlock(const int (*block)[BLOCKSIZE][BLOCKSIZE],int idx, int tetY, int tetX);
 int isStopTetris(int (*board)[ROWS][COLS],const int (*block)[BLOCKSIZE][BLOCKSIZE],int tetY,int tetX);
 int clearRow(int(*board)[ROWS][COLS]);
 int startx = COLS / 2 + 2;
@@ -207,10 +209,11 @@ int main() {
             }
             // printf("\e[%i;%iHtetX:%02d, tetLeft:%02d ,tetRight:%02d\n",20,20, tetX, tetLeft, tetRight);
             // Render next block
+            int nextColor = nextIdx + 31;
             for(int j = 0; j < BLOCKSIZE; j++) {
                 printf("\e[%i;%iH",SCOREROWS+7+j,COLS+5); // set left top
                 for(int i = 0; i < BLOCKSIZE; i++) {
-                    if(blocks[nextIdx][j][i] == 1) printf("#");
+                    if(blocks[nextIdx][j][i] != 0) printf("\e[%dm#\e[0m",nextColor);
                     else printf("·");
                 }
             }
@@ -220,7 +223,7 @@ int main() {
             // printf("\e[%i;%iHtetX:%02d, tetY:%02d, oldTetX:%02d, oldTetY:%02d",20,20,tetX,tetY,oldTetX,oldTetY);
 
             // Draw tetris
-            printBlock(&block,newTetY,newTetX);
+            printBlock(&block,idx,newTetY,newTetX);
             int c = 0;
             // Touch floar or under Tetris
             if(isStopTetris(&board,&block,newTetY,newTetX)) {
@@ -230,12 +233,11 @@ int main() {
                     for(int i = 0; i < BLOCKSIZE; i++ ) {
                         int x = newTetX - 2 -2+ i;
                         if(block[j][i] == 1) {
-                            board[y][x] = 1;
+                            board[y][x] = idx + 1;
                             c++;
                         }
                     }
                 }
-                printf("\e[%i;%iHboard[%d][%d]:%d\n",19,20,0,COLS/2 - 1,board[0][COLS/2 - 1]);
                 if(board[0][COLS/2 - 1] == 1 || board[0][COLS/2] == 1 ) {
                     gameover = 1; 
                     break;
@@ -245,7 +247,7 @@ int main() {
                 addScore = clearRow(&board);
 
                 // show score
-                addScore *= 1000;
+                addScore = addScore == 0 ? 0 : pow(2,addScore-1)*1000;
                 if(addScore!=0) {
                     newScore += addScore;
                     printf("\e[%i;%iH%010d",4,COLS+4,newScore);
@@ -329,13 +331,13 @@ int main() {
     return 0;
 }
 
-void printBlock(const int (*block)[BLOCKSIZE][BLOCKSIZE], int tetY, int tetX) {
+void printBlock(const int (*block)[BLOCKSIZE][BLOCKSIZE],int idx, int tetY, int tetX) {
     for(int j = 0; j < BLOCKSIZE; j++) {
         int y = tetY - 2 + j;
         for(int i = 0; i < BLOCKSIZE; i++) {
             int x = tetX - 2 + i;
-            if( (*block)[j][i] == 1 && starty <= y) {
-                printf("\e[%i;%iH#",y,x);
+            if( (*block)[j][i] != 0 && starty <= y) {
+                printf("\e[%i;%iH\e[%dm#\e[0m",y,x,idx+31);
             }
         }
     }
@@ -370,9 +372,9 @@ int isStopTetris(int (*board)[ROWS][COLS],const int (*block)[BLOCKSIZE][BLOCKSIZ
         int y = tetY - 2 -3 + j;
         for(int i = 0; i < BLOCKSIZE; i ++) {
             int x = tetX - 2 -2 + i;
-            if((*block)[j][i] == 1) {
+            if((*block)[j][i] != 0) {
                 if(y >= 0) {
-                    if(y > ROWS - 2 || (*board)[y+1][x] == 1) { // || board[y+1][x] == 1
+                    if(y > ROWS - 2 || (*board)[y+1][x] != 0) { // || board[y+1][x] == 1
                     return 1;
                 }
                 }
@@ -448,7 +450,7 @@ int clearRow(int(*board)[ROWS][COLS]) {
         if(rowNum) {
             for(int j = 0; j < ROWS; j++) {
                 for(int i = 0; i < COLS; i++) {
-                    if((*board)[j][i]) printf("\e[%i;%iH#",3+j,2+i);
+                    if((*board)[j][i]) printf("\e[%i;%iH\e[%dm#\e[0m",3+j,2+i,(*board)[j][i]+30);
                     else printf("\e[%i;%iH·",3+j,2+i);
                 }
             }
